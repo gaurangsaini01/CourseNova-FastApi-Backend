@@ -1,0 +1,71 @@
+# 🐍 Python
+
+**pycache**/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual Environment
+
+venv/
+.env/
+.env.*
+
+# Environment Variables
+
+.env
+
+# Logs
+
+*.log
+
+# OS Files
+
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+
+.vscode/
+.idea/
+
+# Python build
+
+build/
+dist/
+*.egg-info/
+
+# Jupyter Notebook (if used)
+
+.ipynb_checkpoints/
+
+# Coverage / Testing
+
+.coverage
+htmlcov/
+.pytest_cache/
+
+# FastAPI specific
+
+*.sqlite3
+
+# Secrets / API keys
+
+secrets.json
+
+# Node (if monorepo with backend)
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker (optional)
+
+*.env.local
+docker-compose.override.yml
+
+# Misc
+
+*.swp
