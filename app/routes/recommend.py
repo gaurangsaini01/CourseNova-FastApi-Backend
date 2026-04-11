@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Body, Depends, HTTPException
-
+from app.services.retrieval import ask_query_from_chatbot
 from app.core.security import check_secret_key
 from app.schemas.course import RecommendationRequest
 
@@ -42,3 +42,11 @@ def get_course_quiz(
         return response
     except Exception:
         raise HTTPException(status_code=500, detail="Failed to get Quiz Questions.")
+
+@router.post('/chatbot')
+def chatbot(query:str=Body(),course_id:str=Body()):
+    try:
+       response = ask_query_from_chatbot(query,course_id)
+       return response
+    except:
+        raise HTTPException(status_code=500,detail='The service Failed')

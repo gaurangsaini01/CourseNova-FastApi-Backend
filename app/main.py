@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.routes.recommend import router
+from app.routes import recommend,ingest
 
 app = FastAPI()
 
@@ -8,4 +8,5 @@ app = FastAPI()
 def health_check():
     return "Hello From Server"
 
-app.include_router(router)
+app.include_router(ingest.router)
+app.include_router(recommend.router)
