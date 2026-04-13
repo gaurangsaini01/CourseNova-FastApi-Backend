@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Body, Depends, HTTPException
-from app.services.retrieval import ask_query_from_chatbot
+from app.services.chatbot import ask_query_from_chatbot
 from app.core.security import check_secret_key
 from app.schemas.course import RecommendationRequest
 
@@ -10,7 +10,6 @@ from app.services.gemini_service import (
 
 router = APIRouter()
 
-
 @router.post("/getCourseRecommendations")
 async def recommend_courses(
     body: RecommendationRequest, _: None = Depends(check_secret_key)
@@ -18,17 +17,10 @@ async def recommend_courses(
     purchased_courses = [course.model_dump() for course in body.enrolled_courses]
     all_courses = [course.model_dump() for course in body.all_courses]
 
-    try:
-        recommendations = get_course_recommendations(
-            all_courses=all_courses,
-            purchased_courses=purchased_courses,
-        )
-        return recommendations
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate recommendations: {str(exc)}",
-        ) from exc
+    return get_course_recommendations(
+        all_courses=all_courses,
+        purchased_courses=purchased_courses,
+    )
 
 
 @router.post("/getCourseQuiz")
@@ -37,16 +29,13 @@ def get_course_quiz(
     courseDescription: str = Body(),
     _: None = Depends(check_secret_key),
 ):
-    try:
-        response = get_course_based_quiz(courseName, courseDescription)
-        return response
-    except Exception:
-        raise HTTPException(status_code=500, detail="Failed to get Quiz Questions.")
+    return get_course_based_quiz(courseName, courseDescription)
 
-@router.post('/chatbot')
-def chatbot(query:str=Body(),course_id:str=Body()):
-    try:
-       response = ask_query_from_chatbot(query,course_id)
-       return response
-    except:
-        raise HTTPException(status_code=500,detail='The service Failed')
+
+@router.post("/chatbot")
+def chatbot(
+    query: str = Body(),
+    course_id: str = Body(),
+    _: None = Depends(check_secret_key),
+):
+    return ask_query_from_chatbot(query, course_id)

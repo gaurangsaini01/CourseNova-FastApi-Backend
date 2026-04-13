@@ -34,7 +34,8 @@ def ask_query_from_chatbot(query: str, course_id: str):
         ],
     }
 
-    response = gemini_client.models.generate_content(
+    try:
+        response = gemini_client.models.generate_content(
         model="gemini-2.5-flash",
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_INSTRUCTIONS_FOR_CHATBOT,
@@ -43,5 +44,12 @@ def ask_query_from_chatbot(query: str, course_id: str):
         ),
         contents=json.dumps(prompt_payload),
     )
+    except Exception as e:
+        if 'quota' in str(e):
+            raise HTTPException(status_code=500,detail='AI CREDITS EXHAUSTED')
+        raise HTTPException(status_code=500,detail='Service layer Issue')
+        
+    if response.parsed:
+        return response.parsed.model_dump()
 
     return response.text
