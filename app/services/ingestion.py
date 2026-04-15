@@ -5,7 +5,7 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from qdrant_client import models
 
-from app.core.clients import gemini_embeddings
+from app.core.clients import openai_embeddings
 from app.core.qdrant import delete_documents_from_qdrant, store_documents_in_qdrant
 
 
@@ -52,7 +52,7 @@ def ingest_pdf(notes_pdf, course, sub_section):
         chunk.metadata["chunk_index"] = index
 
     if chunked_docs:
-        store_documents_in_qdrant(chunked_docs, gemini_embeddings)
+        store_documents_in_qdrant(chunked_docs, openai_embeddings)
 
     return chunked_docs
 

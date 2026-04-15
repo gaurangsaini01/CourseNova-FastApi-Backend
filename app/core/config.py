@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    gemini_api_key: str
+    openai_api_key: str
     x_secret_key: str
     qdrant_api_key: str
     qdrant_api_url: str

@@ -3,7 +3,7 @@ from app.services.chatbot import ask_query_from_chatbot
 from app.core.security import check_secret_key
 from app.schemas.course import RecommendationRequest
 
-from app.services.gemini_service import (
+from app.services.openai import (
     get_course_based_quiz,
     get_course_recommendations,
 )

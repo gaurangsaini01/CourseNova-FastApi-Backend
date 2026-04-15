@@ -1,14 +1,16 @@
 from qdrant_client import models
 import json
-from app.core.clients import gemini_embeddings, gemini_client
+from app.core.clients import openai_client, openai_embeddings
 from app.core.qdrant import get_qdrant_vector_store
 from app.core.system_instructions import SYSTEM_INSTRUCTIONS_FOR_CHATBOT
-from google.genai import types
+
+# from google.genai import types
 from app.schemas.chatbot import ChatBotSchema
 from fastapi import HTTPException
 
+
 def ask_query_from_chatbot(query: str, course_id: str):
-    vector_store = get_qdrant_vector_store(gemini_embeddings)
+    vector_store = get_qdrant_vector_store(openai_embeddings)
     course_filter = models.Filter(
         must=[
             models.FieldCondition(
@@ -35,21 +37,20 @@ def ask_query_from_chatbot(query: str, course_id: str):
     }
 
     try:
-        response = gemini_client.models.generate_content(
-        model="gemini-2.5-flash",
-        config=types.GenerateContentConfig(
-            system_instruction=SYSTEM_INSTRUCTIONS_FOR_CHATBOT,
-            response_mime_type="application/json",
-            response_schema=ChatBotSchema,
-        ),
-        contents=json.dumps(prompt_payload),
-    )
+        response = openai_client.responses.parse(
+            model="gpt-5.4-mini",
+            text_format=ChatBotSchema,
+            instructions=SYSTEM_INSTRUCTIONS_FOR_CHATBOT,
+            input=json.dumps(prompt_payload),
+        )
     except Exception as e:
-        if 'quota' in str(e):
-            raise HTTPException(status_code=500,detail='AI CREDITS EXHAUSTED')
-        raise HTTPException(status_code=500,detail='Service layer Issue')
-        
-    if response.parsed:
-        return response.parsed.model_dump()
+        error_msg = str(e).lower()
+        if "insufficient_quota" in error_msg:
+            raise HTTPException(500, "OpenAI credits exhausted")
+        if "rate_limit" in error_msg:
+            raise HTTPException(429, "Too many requests")
+        raise HTTPException(500, "AI error")
+    if not response.output_text:
+        raise HTTPException(status_code=500, detail="OpenAI returned an empty response")
 
-    return response.text
+    return response.output_parsed
