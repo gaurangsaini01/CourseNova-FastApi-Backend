@@ -11,7 +11,30 @@ def get_qdrant_client():
     )
 
 
+EMBEDDING_DIMENSIONS = 1536  # text-embedding-3-small
+
+
+def ensure_collection():
+    client = get_qdrant_client()
+    if client.collection_exists(settings.qdrant_collection_name):
+        return
+
+    try:
+        client.create_collection(
+            collection_name=settings.qdrant_collection_name,
+            vectors_config=models.VectorParams(
+                size=EMBEDDING_DIMENSIONS,
+                distance=models.Distance.COSINE,
+            ),
+        )
+    except Exception:
+        # another request may have created it between the check and the create
+        if not client.collection_exists(settings.qdrant_collection_name):
+            raise
+
+
 def ensure_payload_indexes():
+    ensure_collection()
     client = get_qdrant_client()
     index_fields = [
         "metadata.course_id",
