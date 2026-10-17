@@ -1,0 +1,60 @@
+name: Deploy to GCP
+
+on:
+  push:
+    branches:
+      - main
+env:
+  REGISTRY: asia-south2-docker.pkg.dev/project-4d3d7acb-058d-4117-94f/coursenova
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-push-to-gcp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to GCP
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/273894459279/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-coursenova-ai@project-4d3d7acb-058d-4117-94f.iam.gserviceaccount.com
+          token_format: access_token
+      - name: Docker login to Artifact Registry
+        uses: docker/login-action@v3
+        with:
+          registry: asia-south2-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{steps.auth.outputs.access_token}}
+      - name: Build and push Repo
+        run: |
+          docker build \
+          -t $REGISTRY/fastapi:${{github.sha}} \
+          -t $REGISTRY/fastapi:latest \
+          .
+          docker push --all-tags $REGISTRY/fastapi
+
+  deploy:
+    needs: build-and-push-to-gcp
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up SSH
+        env:
+          SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ vars.VM_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy ai-server on VM
+        run: |
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes \
+            ${{ vars.VM_USER }}@${{ vars.VM_HOST }} '
+              cd ~/CourseNovaAI &&
+              docker compose -f docker-compose.prod.yaml pull ai-server &&
+              docker compose -f docker-compose.prod.yaml up -d ai-server
+            '
