@@ -32,10 +32,10 @@ jobs:
       - name: Build and push Repo
         run: |
           docker build \
-          -t $REGISTRY/fastapi:${{github.sha}} \
-          -t $REGISTRY/fastapi:latest \
+          -t $REGISTRY/ai-server:${{github.sha}} \
+          -t $REGISTRY/ai-server:latest \
           .
-          docker push --all-tags $REGISTRY/fastapi
+          docker push --all-tags $REGISTRY/ai-server
 
   deploy:
     needs: build-and-push-to-gcp
